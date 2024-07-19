@@ -1,0 +1,1 @@
+# cme winrm $ip -u $(cat userInformation/login.txt | cut -d ":" -f 1) -p $(cat userInformation/login.txt | cut -d ":" -f 2)
