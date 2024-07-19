@@ -1,9 +1,10 @@
 
 /.idea/*
-/configs/main.json
+/configs/*
 .venv/*
 */__pycache__/*
 vpns/*
 wslsync.sh
 kalisync.sh
 *.pyc
+cache/*
