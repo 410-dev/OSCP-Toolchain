@@ -31,6 +31,8 @@ else:
     data.sortKeysByName()
     data.typeCheck(writeTypeData=True)
 
+    os.makedirs("configs", exist_ok=True)
+
     with open("configs/main.json", "w") as file:
         file.write(data.compileString())
         print("configs/main.json saved")
@@ -204,6 +206,8 @@ def main():
     off = False
     modules = listModules.run()
     while not off:
+        if not os.path.isdir("cache"):
+            os.makedirs("cache", exist_ok=True)
         print("")
         print("=========== Main Menu ===========")
         if not Host.isRunningPrivileged():

