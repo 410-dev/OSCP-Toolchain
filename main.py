@@ -76,6 +76,7 @@ print(f"Current machine is {Host.closestDistribution()}")
 
 
 def mapFromMemory(string):
+    result = string
     try:
         if not isinstance(string, str) or "$$" not in string:
             return string
@@ -97,7 +98,6 @@ def mapFromMemory(string):
             # Substitute all matches in the string using the replace_token function
             result = pattern.sub(replace_token, string)
 
-            return result
         else:
             # Regex to match the pattern $$<memoryId>
             pattern = re.compile(r'\$\$([^\s]+)')
@@ -111,10 +111,12 @@ def mapFromMemory(string):
             # Substitute all matches in the string using the replace_token function
             result = pattern.sub(replace_token, string)
 
-            return result
-
     except Exception as e:
-        return string
+        return result
+
+    if "$$" in result:
+        return mapFromMemory(result)
+    return result
 
 
 def get_user_input(param_name, param_info):
