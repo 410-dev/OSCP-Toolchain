@@ -13,6 +13,9 @@ import os
 
 data = LKSDM()
 
+if not os.path.isdir("cache"):
+    os.makedirs("cache", exist_ok=True)
+
 if os.path.isfile("configs/main.json"):
     with open("configs/main.json", "r") as file:
         data = LKSDM(parseString=file.read())
@@ -20,6 +23,10 @@ if os.path.isfile("configs/main.json"):
 
 else:
     data.set("kaliDetectionPath", "/etc/kali-menu,/etc/kali_menu,/tmp/kali_emulate")
+    data.set("MemoryPersistence", {
+        "enabled": False,
+        "loadOnStart": True
+    })
     data.set("DefaultConnections", {
         "enabled": False,
         "targetMachine": "",
@@ -69,44 +76,45 @@ print(f"Current machine is {Host.closestDistribution()}")
 
 
 def mapFromMemory(string):
+    try:
+        if not isinstance(string, str) or "$$" not in string:
+            return string
 
-    if not isinstance(string, str) or "$$" not in string:
-        print("Warning: mapFromMemory called with invalid input.")
+        if ":" in string:
+            # Regex to match the pattern $$<memoryId>:<key>
+            pattern = re.compile(r'\$\$([^\s:]+):([^\s]+)')
+
+            def replace_token(match):
+                memoryId = match.group(1)
+                key = match.group(2)
+                # Assuming Memory.get(memoryId).get(key) retrieves the desired value
+                if len(key) == 0:
+                    value = str(Memory.get(memoryId))
+                else:
+                    value = str(Memory.get(memoryId).get(key))
+                return value
+
+            # Substitute all matches in the string using the replace_token function
+            result = pattern.sub(replace_token, string)
+
+            return result
+        else:
+            # Regex to match the pattern $$<memoryId>
+            pattern = re.compile(r'\$\$([^\s]+)')
+
+            def replace_token(match):
+                memoryId = match.group(1)
+                # Assuming Memory.get(memoryId) retrieves the desired value
+                value = str(Memory.get(memoryId))
+                return value
+
+            # Substitute all matches in the string using the replace_token function
+            result = pattern.sub(replace_token, string)
+
+            return result
+
+    except Exception as e:
         return string
-
-    if ":" in string:
-        # Regex to match the pattern $$<memoryId>:<key>
-        pattern = re.compile(r'\$\$([^\s:]+):([^\s]+)')
-
-        def replace_token(match):
-            memoryId = match.group(1)
-            key = match.group(2)
-            # Assuming Memory.get(memoryId).get(key) retrieves the desired value
-            if len(key) == 0:
-                value = Memory.get(memoryId)
-            else:
-                value = Memory.get(memoryId).get(key)
-            return value
-
-        # Substitute all matches in the string using the replace_token function
-        result = pattern.sub(replace_token, string)
-
-        return result
-    else:
-        # Regex to match the pattern $$<memoryId>
-        pattern = re.compile(r'\$\$([^\s]+)')
-
-        def replace_token(match):
-            memoryId = match.group(1)
-            # Assuming Memory.get(memoryId) retrieves the desired value
-            value = Memory.get(memoryId)
-            return value
-
-        # Substitute all matches in the string using the replace_token function
-        result = pattern.sub(replace_token, string)
-
-        return result
-
 
 
 def get_user_input(param_name, param_info):
@@ -204,6 +212,11 @@ def run_module(module_name):
 
 def main():
     off = False
+
+    # Load memory if persistency is enabled
+    if Memory.get("config").get("MemoryPersistence.loadOnStart"):
+        Memory.load()
+
     modules = listModules.run()
     while not off:
         if not os.path.isdir("cache"):
@@ -214,7 +227,7 @@ def main():
             print("WARNING: Toolchain is NOT in superuser.")
             print("WARNING: This program recommends using superuser privileges.")
             print("================================")
-        print("1. List installed modules (Calls tools.current.listModules)")
+        print("1. List installed modules")
         print("2. Exit")
         print("")
         print("Module name >>> ", end="")
@@ -225,17 +238,17 @@ def main():
         elif option == "2":
             off = True
         else:
-            try:
-                if int(option) in modules:
-                    print(f"Running module: {modules[int(option)]}")
-                    option = modules[int(option)]
-                    run_module(option)
-                else:
-                    print("Invalid module number.")
-            except ValueError:
-                if option.startswith("$$"):
-                    print(mapFromMemory(option))
-                else:
+            if option.startswith("$$"):
+                print(mapFromMemory(option))
+            else:
+                try:
+                    if int(option) in modules:
+                        print(f"Running module: {modules[int(option)]}")
+                        option = modules[int(option)]
+                        run_module(option)
+                    else:
+                        print("Invalid module number.")
+                except ValueError:
                     run_module(option)
 
 
