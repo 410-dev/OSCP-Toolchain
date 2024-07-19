@@ -485,6 +485,9 @@ class Data:
     def fromCallableData(self, callableDS):
         self.dictForm[Data.ReservedNames.DataRoot] = callableDS.getAsDict()
 
+    def __str__(self):
+        return self.compileString()
+
 
 class CallableData:
     def __init__(self, data: dict = None):
